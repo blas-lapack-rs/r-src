@@ -1,9 +1,9 @@
 use std::{
-    path::Path,
+    collections::HashMap,
     ffi::{OsStr, OsString},
     io,
+    path::Path,
     process::Command,
-    collections::HashMap,
 };
 
 #[cfg(target_family = "unix")]
@@ -19,10 +19,10 @@ struct ConfigVariables {
 
 impl ConfigVariables {
     fn get_r_cmd_config(&self, key: &str) -> String {
-	match self.map.get(key) {
-	    Some(value) => value.to_string(),
-	    None => String::from("")
-	}
+        match self.map.get(key) {
+            Some(value) => value.to_string(),
+            None => String::from(""),
+        }
     }
 }
 
@@ -90,53 +90,51 @@ fn byte_array_to_os_string(bytes: &[u8]) -> OsString {
 }
 
 // Execute an R CMD config and return the captured output
-fn r_cmd_config <S: AsRef<OsStr>>(r_binary: S) -> io::Result<OsString> {
+fn r_cmd_config<S: AsRef<OsStr>>(r_binary: S) -> io::Result<OsString> {
     let out = Command::new(r_binary)
-	.args(&["CMD", "config", "--all"])
-	.output()?;
-    
+        .args(&["CMD", "config", "--all"])
+        .output()?;
+
     // if there are any errors we print them out, helps with debugging
     if !out.stderr.is_empty() {
-	println!(
+        println!(
             "> {}",
             byte_array_to_os_string(&out.stderr)
-		.as_os_str()
-		.to_string_lossy()
-	);
+                .as_os_str()
+                .to_string_lossy()
+        );
     }
-    
+
     Ok(byte_array_to_os_string(&out.stdout))
 }
 
-
 fn build_r_cmd_configs() -> ConfigVariables {
     let r_configs = r_cmd_config("R");
-    
+
     let mut rcmd_config_map = HashMap::new();
     match r_configs {
-	Ok(configs) => {
-	    let input = configs.as_os_str().to_string_lossy();
-	    for line in input.lines() {
-		// Ignore lines beyond comment marker
-		if line.starts_with("##") {
-		    break;
-		}
-		let parts: Vec<_> = line.split('=').map(str::trim).collect();
-		if let [name, value] = parts.as_slice() {
-		    rcmd_config_map.insert(name.to_string(), value.to_string());
-		}
-	    }
+        Ok(configs) => {
+            let input = configs.as_os_str().to_string_lossy();
+            for line in input.lines() {
+                // Ignore lines beyond comment marker
+                if line.starts_with("##") {
+                    break;
+                }
+                let parts: Vec<_> = line.split('=').map(str::trim).collect();
+                if let [name, value] = parts.as_slice() {
+                    rcmd_config_map.insert(name.to_string(), value.to_string());
+                }
+            }
         }
-	_ => ()
+        _ => (),
     }
     // Return the struct
     ConfigVariables {
-	map: rcmd_config_map,
+        map: rcmd_config_map,
     }
 }
 
 fn get_libs_and_paths(strings: Vec<String>) -> (Vec<String>, Vec<String>) {
-
     let mut paths: Vec<String> = Vec::new();
     let mut libs: Vec<String> = Vec::new();
 
@@ -155,25 +153,27 @@ fn get_libs_and_paths(strings: Vec<String>) -> (Vec<String>, Vec<String>) {
 
 fn main() {
     let r_configs = build_r_cmd_configs();
-    let (lib_paths, libs) = get_libs_and_paths([
-	r_configs.get_r_cmd_config("BLAS_LIBS"),
-	r_configs.get_r_cmd_config("LAPACK_LIBS"),
-	r_configs.get_r_cmd_config("FLIBS")
-    ].to_vec());
+    let (lib_paths, libs) = get_libs_and_paths(
+        [
+            r_configs.get_r_cmd_config("BLAS_LIBS"),
+            r_configs.get_r_cmd_config("LAPACK_LIBS"),
+            r_configs.get_r_cmd_config("FLIBS"),
+        ]
+        .to_vec(),
+    );
 
     for path in lib_paths.iter() {
-	// Some R builds (e.g. homebrew) contain hardwired gfortran12
-	// paths, which may or may not exist if one has upgraded
-	// gfortran. So filter out non-existent ones, so that cargo
-	// doesn't complain.
-        if Path::new(path).exists() {	
-	    println!("cargo:rustc-link-search={}", path);
-	}
+        // Some R builds (e.g. homebrew) contain hardwired gfortran12
+        // paths, which may or may not exist if one has upgraded
+        // gfortran. So filter out non-existent ones, so that cargo
+        // doesn't complain.
+        if Path::new(path).exists() {
+            println!("cargo:rustc-link-search={}", path);
+        }
     }
 
     for lib in libs.iter() {
-	println!("cargo:rustc-link-lib=dylib={}", lib);
+        println!("cargo:rustc-link-lib=dylib={}", lib);
     }
     println!("cargo:rerun-if-changed=build.rs");
-    
 }
