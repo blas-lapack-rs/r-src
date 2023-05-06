@@ -1,5 +1,4 @@
 # r-blas-lapack-src [![Package][package-img]][package-url] [![Documentation][documentation-img]][documentation-url] [![Build][build-img]][build-url]
-# r-blas-lapack-src
 
 A source of [BLAS] and [LAPACK] via R. Note that only double precision
 routines are provided by R. The build script for this particilar crate
