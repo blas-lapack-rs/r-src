@@ -1,7 +1,7 @@
 # r-blas-lapack-src [![Package][package-img]][package-url] [![Documentation][documentation-img]][documentation-url] [![Build][build-img]][build-url]
 
 A source of [BLAS] and [LAPACK] via R. Note that only double precision
-routines are provided by R. The build script for this particilar crate
+routines are provided by R. The build script for this particular crate
 owes a lot to [libR-sys](https://github.com/extendr/libR-sys) of the
 [extendr](https://github.com/extendr) project, with sections lifted
 from there, in addition to new code.
