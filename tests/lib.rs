@@ -1,5 +1,5 @@
 extern crate libc;
-extern crate r_blas_lapack_src;
+extern crate r_src;
 
 use libc::{c_double, c_int};
 

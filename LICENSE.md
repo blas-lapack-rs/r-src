@@ -10,7 +10,7 @@ The following notice applies to every file of the project.
 ## The MIT License
 
 ```
-Copyright 2023 The r-blas-lapack-src Developers
+Copyright 2023 The r-src Developers
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of
 this software and associated documentation files (the “Software”), to deal in
