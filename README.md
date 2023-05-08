@@ -1,11 +1,11 @@
 # r-src - A Source of `BLAS` and `LAPACK` via R
 
-[![Github Actions Build Status](https://github.com/blas-lapack-src/r-src/workflows/Tests/badge.svg)](https://github.com/blas-lapack-rs/r-src/actions)
+[![Github Actions Build Status](https://github.com/blas-lapack-rs/r-src/workflows/Tests/badge.svg)](https://github.com/blas-lapack-rs/r-src/actions)
 [![Crates.io](https://img.shields.io/crates/v/r-src.svg)](https://crates.io/crates/r_src)
 [![Documentation](https://docs.rs/extendr-api/badge.svg)](https://docs.rs/r_src)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-Note that only double precision routines are provided by R. The build
+Note that only double precision routines are provided by `R`. The build
 script for this particular crate owes a lot to
 [libR-sys](https://github.com/extendr/libR-sys) of the
 [extendr](https://github.com/extendr) project, with sections lifted
