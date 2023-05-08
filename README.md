@@ -1,8 +1,13 @@
-# r-src [![Package][package-img]][package-url] [![Documentation][documentation-img]][documentation-url] [![Build][build-img]][build-url]
+# r-src - A Source of `BLAS` and `LAPACK` via R
 
-A source of [BLAS] and [LAPACK] via R. Note that only double precision
-routines are provided by R. The build script for this particular crate
-owes a lot to [libR-sys](https://github.com/extendr/libR-sys) of the
+[![Github Actions Build Status](https://github.com/blas-lapack-src/r-src/workflows/Tests/badge.svg)](https://github.com/blas-lapack-rs/r-src/actions)
+[![Crates.io](https://img.shields.io/crates/v/r-src.svg)](https://crates.io/crates/r_src)
+[![Documentation](https://docs.rs/extendr-api/badge.svg)](https://docs.rs/r_src)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+Note that only double precision routines are provided by R. The build
+script for this particular crate owes a lot to
+[libR-sys](https://github.com/extendr/libR-sys) of the
 [extendr](https://github.com/extendr) project, with sections lifted
 from there, in addition to new code.
 
@@ -56,9 +61,9 @@ will be licensed according to the terms given in [LICENSE.md](LICENSE.md).
 
 [build-img]: https://travis-ci.org/blas-lapack-rs/r-src.svg?branch=master
 [build-url]: https://travis-ci.org/blas-lapack-rs/r-src
-[documentation-img]: https://docs.rs/r-src/badge.svg
-[documentation-url]: https://docs.rs/r-src
-[package-img]: https://img.shields.io/crates/v/r-src.svg
-[package-url]: https://crates.io/crates/r-src
+[documentation-img]: https://docs.rs/r_src/badge.svg
+[documentation-url]: https://docs.rs/r_src
+[package-img]: https://img.shields.io/crates/v/r_src.svg
+[package-url]: https://crates.io/crates/r_src
 
 
