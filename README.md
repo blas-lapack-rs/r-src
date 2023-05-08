@@ -44,8 +44,6 @@ cargo test
 cargo test --target x86_64-pc-windows-gnu
 ```
 
-## [Architecture]
-
 ## Contribution
 
 Your contribution is highly appreciated. Do not hesitate to open an issue or a
