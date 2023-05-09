@@ -13,6 +13,12 @@ categories = ["science"]
 keywords = ["linear-algebra"]
 build = "build.rs"
 
+# Excludes
+exclude = [
+    ".gitignore",
+    ".github/*",
+    "ci-cargo.ps1",
+]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dev-dependencies]
