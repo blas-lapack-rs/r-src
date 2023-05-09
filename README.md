@@ -1,4 +1,4 @@
-# r-src - A Source of `BLAS` and `LAPACK` via R
+# r-src : A Source of `BLAS` and `LAPACK` via R
 
 [![Github Actions Build Status](https://github.com/blas-lapack-rs/r-src/workflows/Tests/badge.svg)](https://github.com/blas-lapack-rs/r-src/actions)
 [![Crates.io](https://img.shields.io/crates/v/r-src.svg)](https://crates.io/crates/r_src)
@@ -10,6 +10,10 @@ script for this particular crate owes a lot to
 [libR-sys](https://github.com/extendr/libR-sys) of the
 [extendr](https://github.com/extendr) project, with sections lifted
 from there, in addition to new code.
+
+Use of this package is explained
+[here](https://blas-lapack-rs.github.io/usage), specifically under the
+_Sources_ section.
 
 ## Installation
 
