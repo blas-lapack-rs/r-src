@@ -89,6 +89,40 @@ fn byte_array_to_os_string(bytes: &[u8]) -> OsString {
     OsString::from_wide(&wide)
 }
 
+
+/// Runs the command `R RHOME` and returns the trimmed output if successful.
+/// Panics with a meaningful error message if the command fails.
+fn get_r_home() -> String {
+    // Attempt to run the command `R RHOME`
+    let output = Command::new("R")
+        .arg("RHOME")
+        .output(); // Capture the command's output
+    
+    match output {
+        Ok(output) if output.status.success() => {
+            // Convert stdout to a String and trim it
+            String::from_utf8(output.stdout)
+                .expect("Invalid UTF-8 in RHOME output")
+                .trim()
+                .to_string()
+        }
+        Ok(output) => {
+            eprintln!(
+                "Error: Command `R RHOME` failed with status: {}\nStderr: {}",
+                output.status,
+                String::from_utf8_lossy(&output.stderr)
+            );
+            panic!("Failed to detect RHOME using `R RHOME`. Is R installed and in your PATH?");
+        }
+        Err(err) => {
+            panic!(
+                "Failed to execute `R RHOME`: {}. Is R installed and in your PATH?",
+                err
+            );
+        }
+    }
+}
+
 // Execute an R CMD config and return the captured output
 fn r_cmd_config<S: AsRef<OsStr>>(r_binary: S) -> io::Result<OsString> {
     let out = Command::new(r_binary)
@@ -109,7 +143,8 @@ fn r_cmd_config<S: AsRef<OsStr>>(r_binary: S) -> io::Result<OsString> {
 }
 
 fn build_r_cmd_configs() -> ConfigVariables {
-    let r_configs = r_cmd_config("R");
+    let r_binary = format!(r"{}/bin/R", get_r_home());
+    let r_configs = r_cmd_config(r_binary);
 
     let mut rcmd_config_map = HashMap::new();
     match r_configs {
@@ -151,27 +186,29 @@ fn get_libs_and_paths(strings: Vec<String>) -> (Vec<String>, Vec<String>) {
     (paths, libs)
 }
 
+
 fn main() {
+    
     let r_configs = build_r_cmd_configs();
     let (lib_paths, libs) = get_libs_and_paths(
         [
-            r_configs.get_r_cmd_config("BLAS_LIBS"),
-            r_configs.get_r_cmd_config("LAPACK_LIBS"),
-            r_configs.get_r_cmd_config("FLIBS"),
+	    r_configs.get_r_cmd_config("BLAS_LIBS"),
+	    r_configs.get_r_cmd_config("LAPACK_LIBS"),
+	    r_configs.get_r_cmd_config("FLIBS"),
         ]
-        .to_vec(),
+	    .to_vec(),
     );
-
+    
     for path in lib_paths.iter() {
         // Some R builds (e.g. homebrew) contain hardwired gfortran12
         // paths, which may or may not exist if one has upgraded
         // gfortran. So filter out non-existent ones, so that cargo
         // doesn't complain.
         if Path::new(path).exists() {
-            println!("cargo:rustc-link-search={}", path);
+	    println!("cargo:rustc-link-search={}", path);
         }
     }
-
+    
     for lib in libs.iter() {
         println!("cargo:rustc-link-lib=dylib={}", lib);
     }
