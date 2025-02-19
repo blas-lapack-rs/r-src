@@ -1,6 +1,6 @@
 use std::{
     collections::HashMap,
-    io, env,
+    env, io,
     path::{Path, PathBuf},
     process::Command,
 };
@@ -21,11 +21,11 @@ fn get_r_home() -> String {
     // Indicate that we're trying to find R_HOME from the environment.
     print!("Trying to find R_HOME in environment...");
     if let Ok(r_home) = env::var("R_HOME") {
-	println!("{}", r_home);
+        println!("{}", r_home);
         return r_home;
     } else {
-	println!("unsuccessful!");
-    }	
+        println!("unsuccessful!");
+    }
 
     // Inform that R_HOME was not found in the environment and we're trying `R RHOME`.
     print!("R_HOME not found in environment, trying `R RHOME` command...");
@@ -36,12 +36,10 @@ fn get_r_home() -> String {
         .expect("Failed to execute `R RHOME` command");
 
     if output.status.success() {
-        let r_home = String::from_utf8_lossy(&output.stdout)
-            .trim()
-            .to_string();
+        let r_home = String::from_utf8_lossy(&output.stdout).trim().to_string();
 
         if !r_home.is_empty() {
-	    println!("success: {}", r_home);
+            println!("success: {}", r_home);
             return r_home;
         }
     }
@@ -128,13 +126,13 @@ fn main() {
     for path in lib_paths {
         if Path::new(&path).exists() {
             println!("cargo:rustc-link-search={}", path);
-	    eprintln!("cargo:rustc-link-search={}", path);
+            eprintln!("cargo:rustc-link-search={}", path);
         }
     }
     // Emit libraries for the linker.
     for lib in libs {
         println!("cargo:rustc-link-lib=dylib={}", lib);
-	eprintln!("cargo:rustc-link-lib=dylib={}", lib);
+        eprintln!("cargo:rustc-link-lib=dylib={}", lib);
     }
     println!("cargo:rerun-if-changed=build.rs");
 }
