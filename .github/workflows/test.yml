@@ -88,8 +88,8 @@ jobs:
           LIBRARY_PATH = "${pwd_slash}/libgcc_mock"
           "@ | Out-File -FilePath .cargo/config.toml -Encoding utf8 -Append ;
         env:
-          RUST_TOOLCHAIN: ${{ matrix.config.rust-version }}
-	  
+          RUST_TOOLCHAIN: ${{ matrix.config.rust }}
+
       - name: Test crate
         run: |
           cargo test -vv
