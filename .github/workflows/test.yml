@@ -7,8 +7,11 @@ on:
     branches: [main, master]
 
 jobs:
-  R-CMD-check:
+  Crate-check:
     runs-on: ${{ matrix.config.os }}
+    defaults:
+      run:
+        shell: bash
 
     name: "${{ matrix.config.os }} (R: ${{ matrix.config.r }}, Rust: ${{ matrix.config.rust }})"
 
