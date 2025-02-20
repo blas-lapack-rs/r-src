@@ -41,5 +41,5 @@ jobs:
 
       - name: Test crate
         run: |
-          cargo test --vv
+          cargo test -vv
 
