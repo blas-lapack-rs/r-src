@@ -41,6 +41,13 @@ jobs:
           http-user-agent: ${{ matrix.config.http-user-agent }}
           use-public-rspm: ${{ matrix.config.rspm || 'true' }}
 
+      - name: Set R_HOME on Windows
+        if: matrix.config.os == 'windows-latest'
+        shell: pwsh
+        run: |
+          $rHome = & Rscript -e "cat(R.home())"
+          echo "R_HOME=$rHome" | Out-File -FilePath $env:GITHUB_ENV -Append
+
       - name: Test crate
         run: |
           cargo test -vv
