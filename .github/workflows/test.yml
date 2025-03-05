@@ -6,47 +6,44 @@ on:
   pull_request:
     branches: [main, master]
 
+name: Cargo-test
+
 jobs:
-  Crate-check:
+  Cargo-test:
     runs-on: ${{ matrix.config.os }}
-    defaults:
-      run:
-        shell: bash
-
-    name: "${{ matrix.config.os }} (R: ${{ matrix.config.r }}, Rust: ${{ matrix.config.rust }})"
-
+    name: Cargo-test ${{ matrix.config.os }} (${{ matrix.config.r }} - ${{ matrix.config.rust-version }})
+    
     strategy:
       fail-fast: false
       matrix:
         config:
-          - {os: 'macos-latest',     r: 'release', rust: 'stable'}
-          - {os: 'windows-latest',   r: 'release', rust: 'stable'}
-          - {os: 'ubuntu-latest',    r: 'release', rust: 'stable'}
-          - {os: 'ubuntu-latest',    r: 'devel',   rust: 'stable', http-user-agent: 'release'}
-          - {os: 'ubuntu-latest',    r: 'release', rust: 'nightly'}
-          - {os: 'ubuntu-24.04-arm', r: 'release', rust: 'stable', rspm: 'false'}
-
+          - {os: windows-latest, r: 'release', rust-version: 'stable-msvc', rust-target: 'x86_64-pc-windows-gnu' }
+          - {os: windows-latest, r: 'devel',   rust-version: 'stable-msvc', rust-target: 'x86_64-pc-windows-gnu' }
+          - {os: macOS-latest,   r: 'release', rust-version: 'stable' }
+          - {os: ubuntu-latest,  r: 'release', rust-version: 'stable' }
+          - {os: ubuntu-latest,  r: 'devel',   rust-version: 'stable' }
+	  
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
-
+	  
     steps:
       - uses: actions/checkout@v4
 
-      - uses: dtolnay/rust-toolchain@nightly
-        if: matrix.config.rust == 'nightly'
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ matrix.config.rust-version }}
+          targets: ${{ matrix.config.rust-target }}
+
+      - uses: baptiste0928/cargo-install@v3
+        if: matrix.config.r == 'release'
+        with:
+          crate: cargo-license
 
       - uses: r-lib/actions/setup-r@v2
         with:
           r-version: ${{ matrix.config.r }}
-          http-user-agent: ${{ matrix.config.http-user-agent }}
-          use-public-rspm: ${{ matrix.config.rspm || 'true' }}
-
-      - name: Set R_HOME on Windows
-        if: matrix.config.os == 'windows-latest'
-        shell: pwsh
-        run: |
-          $rHome = & Rscript -e "cat(R.home())"
-          echo "R_HOME=$rHome" | Out-File -FilePath $env:GITHUB_ENV -Append
+          rtools-version: ${{ matrix.config.rtools-version }}
+          use-public-rspm: true
 
       - name: Test crate
         run: |
