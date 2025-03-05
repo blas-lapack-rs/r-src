@@ -20,10 +20,10 @@ jobs:
           - {os: macOS-latest,   r: 'release', rust-version: 'stable' }
           - {os: ubuntu-latest,  r: 'release', rust-version: 'stable' }
           - {os: ubuntu-latest,  r: 'devel',   rust-version: 'stable' }
-	  
+
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
-	  
+  
     steps:
       - uses: actions/checkout@v4
 
@@ -46,4 +46,3 @@ jobs:
       - name: Test crate
         run: |
           cargo test -vv
-
