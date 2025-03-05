@@ -15,34 +15,117 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - {os: windows-latest, r: 'release', rust-version: 'stable-msvc', rust-target: 'x86_64-pc-windows-gnu', rtools-version: '44'}
-          - {os: windows-latest, r: 'devel',   rust-version: 'stable-msvc', rust-target: 'x86_64-pc-windows-gnu', rtools-version: '44'}
+          - {os: windows-latest, r: 'release', rust-version: 'stable-msvc', target: 'x86_64-pc-windows-gnu', rtools-version: '44'}
+          - {os: windows-latest, r: 'devel',   rust-version: 'stable-msvc', target: 'x86_64-pc-windows-gnu', rtools-version: '44'}
           - {os: macOS-latest,   r: 'release', rust-version: 'stable' }
           - {os: ubuntu-latest,  r: 'release', rust-version: 'stable' }
           - {os: ubuntu-latest,  r: 'devel',   rust-version: 'stable' }
 
     env:
+      RSPM: ${{ matrix.config.rspm }}
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
-  
+
+    # PowerShell core is available on all platforms and can be used to unify scripts
+    defaults:
+      run:
+        shell: pwsh
+
     steps:
       - uses: actions/checkout@v4
 
-      - uses: dtolnay/rust-toolchain@master
-        with:
-          toolchain: ${{ matrix.config.rust-version }}
-          targets: ${{ matrix.config.rust-target }}
-
-      - uses: baptiste0928/cargo-install@v3
-        if: matrix.config.r == 'release'
-        with:
-          crate: cargo-license
-
-      - uses: r-lib/actions/setup-r@v2
+      - name: Set up R
+        uses: r-lib/actions/setup-r@v2
         with:
           r-version: ${{ matrix.config.r }}
-          rtools-version: ${{ matrix.config.rtools-version }}
           use-public-rspm: true
+          rtools-version: ${{ matrix.config.rtools-version }}
 
-      - name: Test crate
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ matrix.config.rust-version }}
+          components: rustfmt, clippy
+          targets: ${{ matrix.config.target }}
+
+      # Stuff here lifted from libR-sys workflows with thanks to authors.
+      # All configurations for Windows go here
+      # 1. Configure linker
+      # 2. Create libgcc_eh mock
+      # 3. Add R bin path to PATH
+      # 4. Add Rtools' GCC to PATH (required to find linker)
+      # 5. Add include path (required to resolve standard headers like stdio.h)
+      - name: Configure Windows
+        if: runner.os == 'Windows'
         run: |
-          cargo test -vv
+          # Configure linker
+          echo "RUSTFLAGS=-C linker=x86_64-w64-mingw32.static.posix-gcc.exe" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+          # Create libgcc_eh mock
+          New-Item -Path libgcc_mock -Type Directory
+          New-Item -Path libgcc_mock\libgcc_eh.a -Type File
+          New-Item -Path libgcc_mock\libgcc_s.a -Type File
+          $pwd_slash = echo "${PWD}" | % {$_ -replace '\\','/'}
+          echo "LIBRARY_PATH=${pwd_slash}/libgcc_mock" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+          # Add R bin path to PATH
+          echo "$(Rscript.exe -e 'cat(normalizePath(R.home()))')\bin\x64"  | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append ;
+
+          # Add Rtools' GCC to PATH
+          if ($env:RTOOLS_VERSION -eq '44') {
+            $mingw_root = "C:\rtools44\x86_64-w64-mingw32.static.posix"
+          } elseif ($env:RTOOLS_VERSION -eq '43') {
+            $mingw_root = "C:\rtools43\x86_64-w64-mingw32.static.posix"
+          } elseif ($env:RTOOLS_VERSION -eq '42') {
+            $mingw_root = "C:\rtools42\x86_64-w64-mingw32.static.posix"
+          }
+          echo "$mingw_root\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+          # Add include path
+          echo "LIBRSYS_LIBCLANG_INCLUDE_PATH=$mingw_root\include" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+        env:
+          RUST_TARGET: ${{ matrix.config.target }}
+          RTOOLS_VERSION: ${{ matrix.config.rtools-version }}
+
+
+      # macOS configurations, mainly llvm and path to libclang
+      # Because of this R installation issue on macOS-11.0 
+      # https://github.com/r-lib/actions/issues/200
+      # Symlinks to R/Rscript are not properly set up, so we do it by hand, using this trick
+      # https://github.com/r-lib/ps/commit/a24f2c4d1bdba63be14e7729b9ab81d0ed9f719e
+      # Environment variables are required fir Mac-OS-11.0, see
+      # https://github.com/extendr/libR-sys/issues/35
+      - name: Configure macOS
+        if: runner.os == 'macOS'
+        run: |
+          brew install llvm
+          echo "LIBCLANG_PATH=$(brew --prefix llvm)/lib" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          $env:LLVM_CONFIG_PATH = "$(brew --prefix llvm)/bin/llvm-config" 
+          echo "LLVM_CONFIG_PATH=$env:LLVM_CONFIG_PATH" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          echo "LIBRSYS_LIBCLANG_INCLUDE_PATH=$(. $env:LLVM_CONFIG_PATH --libdir)/clang/$(. $env:LLVM_CONFIG_PATH --version)/include"  | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+          if ((Get-ChildItem -Path /usr/local/bin -Filter R | Measure-Object).Count -eq 0) {
+            echo "::warning:: Found no R symlink in /usr/local/bin, setting up manually..."
+            ln -s /Library/Frameworks/R.framework/Versions/Current/Resources/bin/R /usr/local/bin/
+          }
+          if ((Get-ChildItem -Path /usr/local/bin -Filter Rscript | Measure-Object).Count -eq 0) {
+            echo "::warning:: Found no Rscript symlink in /usr/local/bin, setting up manually..."
+            ln -s /Library/Frameworks/R.framework/Versions/Current/Resources/bin/Rscript /usr/local/bin/
+          }
+
+      # This is required for ubuntu r-devel
+      # 'Del alias:R' removes R alias which prevents running R 
+      - name: Configure Linux
+        if: runner.os == 'linux'
+        run: |
+          Del alias:R
+          echo "LD_LIBRARY_PATH=$(R -s -e 'cat(normalizePath(R.home()))')/lib" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+        env:
+          RUST_TARGET: ${{ matrix.config.target }}
+
+      - name: Run test
+        run: |
+          . ./ci-cargo.ps1
+          ci-cargo test -vv
+        env:
+          RUST_TARGET: ${{ matrix.config.target }}

@@ -9,12 +9,11 @@ function ci-cargo {
     )
 
 
-    try {
-        Write-Output "::group::$ActionName"
-        $CargoArgs = $CargoArgs | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
-        Write-Output "Running cargo $CargoArgs"
+    try {    
+        echo "::group::$ActionName"
+        echo "Running cargo $CargoArgs"
         cargo $CargoArgs
-        if ($LASTEXITCODE -ne 0) {
+        if($LASTEXITCODE -ne  0) {
             throw $LASTEXITCODE
         }
     }
@@ -22,12 +21,12 @@ function ci-cargo {
         if ($ActionName -ne $null -and $ActionName -ne "") {
             $ActionName = "'$ActionName': "
         }
-        $errMsg = "$($ActionName)cargo failed with code $LASTEXITCODE (args: $CargoArgs)"
-        Write-Output "::error::$errMsg"
-        Write-Error -Message "$errMsg" -ErrorAction Stop
+        $err_msg = "$($ActionName)cargo failed with code $LASTEXITCODE (args: $CargoArgs)"
+        echo "::error::$err_msg"
+        Write-Error -Message "$err_msg" -ErrorAction Stop 
     }
     finally {
-        Write-Output "::endgroup::"
+        echo "::endgroup::"
     }
 
     <#
