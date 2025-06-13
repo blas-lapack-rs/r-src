@@ -4,7 +4,6 @@ use std::{
     path::{Path, PathBuf},
     process::Command,
 };
-use shlex:Shlex;
 
 /// Holds key/value pairs parsed from "R CMD config --all".
 #[derive(Debug)]
@@ -112,18 +111,6 @@ fn get_libs_and_paths(strings: &[String]) -> (Vec<String>, Vec<String>) {
         }
     }
     (paths, libs)
-}
-
-fn split_flags(line: &str) -> Vec<String> {
-    let mut v = Vec::new();
-    for token in Shlex::new(line) {
-        if token.starts_with("-L") {
-            v.push(token[2..].trim_matches('"').to_owned());
-        } else if token.starts_with("-l") {
-            v.push(format!(":{}", token[2..])); // ":foo" avoids lib prefix duplication
-        }
-    }
-    v
 }
 
 fn main() {
