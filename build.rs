@@ -3,9 +3,8 @@ use std::{
     env, io,
     path::{Path, PathBuf},
     process::Command,
-    shlex:Shlex,
 };
-
+use shlex:Shlex;
 
 /// Holds key/value pairs parsed from "R CMD config --all".
 #[derive(Debug)]

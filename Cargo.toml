@@ -24,6 +24,8 @@ exclude = [
 
 [dev-dependencies]
 libc = "0.2"
+
+[build-dependencies]
 shlex = "1"
 
 [package.metadata.docs.rs]
