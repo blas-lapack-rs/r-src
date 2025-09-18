@@ -105,9 +105,16 @@ fn get_libs_and_paths(strings: &[String]) -> (Vec<String>, Vec<String>) {
         for part in s.split_whitespace() {
             if part.starts_with("-L") {
                 paths.push(part[2..].trim_matches('"').to_string());
-            } else if part.starts_with("-l") {
-                libs.push(part[2..].to_string());
-            }
+	    } else if part.starts_with("-l") {
+		let lib = &part[2..];
+		if lib == "flang_rt.runtime" {
+		    // LLVM Flang exposes a virtual token that needs real libs.
+		    libs.push("FortranRuntime".to_string());
+		    libs.push("FortranDecimal".to_string());
+		} else {
+		    libs.push(lib.to_string());
+		}
+	    }		
         }
     }
     (paths, libs)
