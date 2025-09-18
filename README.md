@@ -26,9 +26,11 @@ but has extra platform-specific dependencies for `Windows` such as
 
 Two components are required to build the library:
 
-1. [`R`](https://cran.r-project.org/): It needs to be installed and
-   available in the search path. On `Windows`, the `Rtools` binaries
-   are also expected to be on the search path.
+1. [`R`](https://cran.r-project.org/): An environment variable
+   `R_HOME` indicating the value of `R_HOME` is first looked for and,
+   if not found, the command `R RHOME` is tried, so `R` must be on the
+   path for the latter. On `Windows`, the `Rtools` binaries are also
+   expected to be on the search path.
 2. [`Rust`](https://www.rust-lang.org/learn/get-started): It is
    recommended to install `Rust` using `rustup`; search path should
    include `Rust` binaries.
